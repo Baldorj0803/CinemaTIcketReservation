@@ -16,9 +16,12 @@ const ScheduleSchema = new mongoose.Schema({
 		ref: "Staff",
 		required: true,
 	},
-	date: {
+	startTime: {
 		type: Date,
-		default: Date.now,
+		required: [true, "Эхлэх хугацааг оруулна уу"],
+	},
+	endTime: {
+		type: Date,
 	},
 	priceAdults: {
 		type: Number,
@@ -29,5 +32,38 @@ const ScheduleSchema = new mongoose.Schema({
 		required: [true, "Хүүхдийн тасалбарын үнийг оруулна уу"],
 	},
 });
+
+ScheduleSchema.statics.checkSchedule = async function (start, end, hall) {
+	console.log(hall);
+	const obj = await this.aggregate([
+		{
+			$match: {
+				$and: [
+					{ hallId: new mongoose.Types.ObjectId(hall) },
+
+					{
+						$or: [
+							{
+								startTime: {
+									$gte: start,
+									$lt: end,
+								},
+							},
+							{
+								endTime: {
+									$gte: start,
+									$lt: end,
+								},
+							},
+						],
+					},
+				],
+			},
+		},
+		{ $limit: 1 },
+	]);
+
+	return obj;
+};
 
 module.exports = mongoose.model("Schedule", ScheduleSchema);

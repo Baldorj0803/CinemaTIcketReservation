@@ -1,9 +1,9 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
-const path = require("path");
-const rfs = require("rotating-file-stream");
 const colors = require("colors");
+const fileupload = require("express-fileupload");
+const cors = require("cors");
 
 const connectDB = require("./config/db");
 const categoriesRoutes = require("./routes/categories");
@@ -14,6 +14,7 @@ const hallsRoutes = require("./routes/halls");
 const commentsRoutes = require("./routes/comment");
 const usersRoutes = require("./routes/users");
 const schedulesRoutes = require("./routes/schedules");
+const { login } = require("./controller/login");
 const logger = require("./middleware/logger");
 const errorHandler = require("./middleware/error");
 
@@ -21,19 +22,15 @@ const errorHandler = require("./middleware/error");
 dotenv.config({ path: "./config/config.env" });
 connectDB();
 
-//morgan ашиглан хандалтыг хадгалах
-var accessLogStream = rfs.createStream("access.log", {
-	interval: "1d", // rotate daily
-	path: path.join(__dirname, "log"),
-});
-
 const app = express();
 
 //body parser
 app.use(express.json());
+app.use(fileupload());
+app.use(cors());
 app.use("/upload", express.static("upload"));
 app.use(logger);
-app.use(morgan("combined", { stream: accessLogStream }));
+app.use(morgan("dev"));
 app.use("/api/v1/categories", categoriesRoutes);
 app.use("/api/v1/staffs", staffRoutes);
 app.use("/api/v1/movies", moviesRoutes);
@@ -42,6 +39,7 @@ app.use("/api/v1/halls", hallsRoutes);
 app.use("/api/v1/comments", commentsRoutes);
 app.use("/api/v1/users", usersRoutes);
 app.use("/api/v1/schedules", schedulesRoutes);
+app.post("/api/v1/login", login);
 app.use(errorHandler);
 
 const server = app.listen(process.env.PORT, (req, res) => {

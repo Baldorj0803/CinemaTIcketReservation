@@ -8,8 +8,9 @@ const {
 	deleteSchedule,
 	updateSchedule,
 } = require("../controller/schedules");
+const { protect, authorize } = require("../middleware/protect");
 
-router.route("/").get(getSchedules).post(createSchedule);
+router.route("/").get(getSchedules).post(protect, createSchedule);
 
 router
 	.route("/:id")

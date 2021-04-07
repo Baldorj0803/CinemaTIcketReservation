@@ -1,16 +1,20 @@
 const Hall = require("../models/Hall");
-const Error = require("../utils/MyError");
+const Error = require("../utils/Error");
 const asyncHandler = require("express-async-handler");
 const Branch = require("../models/Branch");
 
 exports.getHalls = asyncHandler(async (req, res, next) => {
-	const halls = await Hall.find();
+	const halls = await Hall.find().populate({
+		path: "branch",
+		select: "branchName photo",
+	});
 
 	res.status(200).json({
 		success: true,
 		data: halls,
 	});
 });
+
 exports.getHall = asyncHandler(async (req, res, next) => {
 	const hall = await Hall.findById(req.params.id);
 

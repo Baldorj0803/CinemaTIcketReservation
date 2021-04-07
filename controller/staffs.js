@@ -1,101 +1,70 @@
 const Staff = require("../models/Staff");
+const Error = require("../utils/Error");
+const asyncHandler = require("express-async-handler");
+const Branch = require("../models/Branch");
 
-exports.getStaffs = async (req, res, next) => {
-	try {
-		const staffs = await Staff.find();
+exports.getStaffs = asyncHandler(async (req, res, next) => {
+	const staffs = await Staff.find();
+	res.status(200).json({
+		success: true,
+		data: staffs,
+	});
+});
 
-		res.status(200).json({
-			success: true,
-			data: staffs,
-		});
-	} catch (error) {
-		res.status(400).json({
-			success: false,
-			error: error.message,
-		});
+exports.getStaff = asyncHandler(async (req, res, next) => {
+	const staff = await Staff.findById(req.params.id);
+
+	if (!staff) {
+		throw new Error(req.params.id + " ID-тэй ажилтан байхгүй!", 400);
 	}
-};
 
-exports.getStaff = async (req, res, next) => {
-	try {
-		const staff = await Staff.findById(req.params.id);
+	res.status(200).json({
+		success: true,
+		data: staff,
+	});
+});
 
-		if (!staff) {
-			return res.status(400).json({
-				success: false,
-				error: req.params.id + "ID-тай ажилтан байхгүй байна",
-			});
-		}
+//register
+exports.createStaff = asyncHandler(async (req, res, next) => {
+	const branch = await Branch.findById(req.body.branchId);
 
-		res.status(200).json({
-			success: true,
-			data: staff,
-		});
-	} catch (error) {
-		res.status(400).json({
-			success: true,
-			error: error.message,
-		});
+	if (!branch) {
+		throw new Error(req.body.branchId + " ID-тай салбар байхгүй байна", 400);
 	}
-};
-exports.createStaff = async (req, res, next) => {
-	try {
-		const staff = await Staff.create(req.body);
-		res.status(200).json({
-			success: true,
-			data: staff,
-		});
-	} catch (error) {
-		res.status(400).json({
-			success: false,
-			error: error.message,
-		});
+
+	const staff = await Staff.create(req.body);
+
+	res.status(200).json({
+		success: true,
+		data: staff,
+	});
+});
+
+exports.updateStaff = asyncHandler(async (req, res, next) => {
+	const staff = await Staff.findByIdAndUpdate(req.params.id, req.body, {
+		new: true,
+		runValidators: true,
+	});
+
+	if (!staff) {
+		throw new Error(req.params.id + " ID-тэй ажилтан байхгүйээээ.", 400);
 	}
-};
-exports.updateStaff = async (req, res, next) => {
-	try {
-		const staff = await Staff.findByIdAndUpdate(req.params.id, req.body, {
-			new: true,
-			runValidators: true,
-		});
 
-		if (!staff) {
-			return res.status(400).json({
-				success: false,
-				error: req.params.id + "ID-тай ажилтан байхгүй байна",
-			});
-		}
+	res.status(200).json({
+		success: true,
+		data: staff,
+	});
+});
 
-		res.status(200).json({
-			success: true,
-			data: staff,
-		});
-	} catch (error) {
-		res.status(400).json({
-			success: true,
-			error: error.message,
-		});
+exports.deleteStaff = asyncHandler(async (req, res, next) => {
+	const staff = await Staff.findByIdAndDelete(req.params.id);
+
+	if (!staff) {
+		throw new Error(req.params.id + " ID-тэй ажилтан байхгүйээээ.", 400);
 	}
-};
-exports.deleteStaff = async (req, res, next) => {
-	try {
-		const staff = await Staff.findByIdAndDelete(req.params.id);
 
-		if (!staff) {
-			return res.status(400).json({
-				success: false,
-				error: req.params.id + "ID-тай ажилтан байхгүй байна",
-			});
-		}
-
-		res.status(200).json({
-			success: true,
-			data: req.params.id + "ID-тай ажилтан устгагдлаа",
-		});
-	} catch (error) {
-		res.status(400).json({
-			success: true,
-			error: error.message,
-		});
-	}
-};
+	res.status(200).json({
+		success: true,
+		data: req.params.id + " ID-тэй ажилтан устгагдлаа",
+	});
+});

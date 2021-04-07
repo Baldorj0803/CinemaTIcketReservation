@@ -38,7 +38,7 @@ const MovieSchema = new mongoose.Schema({
 	},
 	photo: {
 		type: String,
-		default: "no-photo-user.jpg",
+		default: "no-photo-movie.jpg",
 	},
 	movGenre: {
 		type: mongoose.Schema.ObjectId,

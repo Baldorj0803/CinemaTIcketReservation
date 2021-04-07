@@ -1,5 +1,5 @@
 const Branch = require("../models/Branch");
-const MyError = require("../utils/myError");
+const MyError = require("../utils/Error");
 const asyncHandler = require("express-async-handler");
 
 exports.getBranches = asyncHandler(async (req, res, next) => {
@@ -12,7 +12,7 @@ exports.getBranches = asyncHandler(async (req, res, next) => {
 });
 
 exports.getBranch = asyncHandler(async (req, res, next) => {
-	const branch = await Branch.findById(req.params.id);
+	const branch = await Branch.findById(req.params.id).populate("halls");
 
 	if (!branch) {
 		throw new MyError(req.params.id + " ID-тэй салбар байхгүй!", 400);

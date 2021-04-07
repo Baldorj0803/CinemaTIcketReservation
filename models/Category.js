@@ -34,12 +34,12 @@ const CategorySchema = new mongoose.Schema(
 	{ toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-CategorySchema.virtual("movies", {
-	ref: "Movie",
-	localField: "_id",
-	foreignField: "movGenre",
-	justOne: false,
-});
+// CategorySchema.virtual("movies", {
+// 	ref: "Movie",
+// 	localField: "_id",
+// 	foreignField: "movGenre",
+// 	justOne: false,
+// });
 
 CategorySchema.pre("save", function (next) {
 	this.slug = slugify(this.name);

@@ -1,6 +1,6 @@
 const Movie = require("../models/Movie");
 const asyncHandler = require("express-async-handler");
-const MyError = require("../utils/myError");
+const MyError = require("../utils/Error");
 
 exports.getMovies = asyncHandler(async (req, res, next) => {
 	//  api/v1/movies
@@ -36,7 +36,13 @@ exports.getMovies = asyncHandler(async (req, res, next) => {
 	// 	.skip(start - 1)
 	// 	.limit(limit);
 
-	const movies = await query;
+	// const movies = await Movie.find().populate({
+	// 	path: "movGenre",
+	// 	select: "name",
+	// });
+	const movies = await Movie.find();
+
+	// const movies = await query;
 
 	res.status(200).json({
 		success: true,
@@ -60,6 +66,8 @@ exports.getMovie = asyncHandler(async (req, res, next) => {
 
 exports.createMovie = asyncHandler(async (req, res, next) => {
 	const movie = await Movie.create(req.body);
+
+	console.log(movie._id);
 
 	res.status(200).json({
 		success: true,

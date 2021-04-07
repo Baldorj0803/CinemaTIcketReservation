@@ -1,5 +1,5 @@
 const Category = require("../models/Category");
-const MyError = require("../utils/myError");
+const MyError = require("../utils/Error");
 // const asyncHandler = require("../middleware/asyncHandler");
 const asyncHandler = require("express-async-handler");
 

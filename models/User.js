@@ -35,8 +35,9 @@ const UserSchema = new mongoose.Schema({
 	},
 	rNum: {
 		type: String,
-		required: [true, "Регистерийн дугаар аа оруулна уу"],
 		unique: true,
+		required: [true, "Регистерийн дугаар аа оруулна уу"],
+
 		validate: {
 			validator: function (v) {
 				return v.length === 10;
@@ -58,9 +59,13 @@ const UserSchema = new mongoose.Schema({
 });
 
 UserSchema.methods.getJsonWebToken = function () {
-	const token = jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-		expiresIn: process.env.JWT_EXPIRESIN,
-	});
+	const token = jwt.sign(
+		{ id: this._id, role: this.role },
+		process.env.JWT_SECRET,
+		{
+			expiresIn: process.env.JWT_EXPIRESIN,
+		}
+	);
 	return token;
 };
 

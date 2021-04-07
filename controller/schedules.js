@@ -1,6 +1,6 @@
 const Schedule = require("../models/Schedule");
 const asyncHandler = require("express-async-handler");
-const Error = require("../utils/MyError");
+const Error = require("../utils/Error");
 const Staff = require("../models/Staff");
 const Movie = require("../models/Movie");
 const Hall = require("../models/Hall");
@@ -28,16 +28,16 @@ exports.getSchedule = asyncHandler(async (req, res, next) => {
 });
 
 exports.createSchedule = asyncHandler(async (req, res, next) => {
-	const staff = await Staff.findById(req.body.staffId);
-
-	if (!staff) {
-		throw new Error(req.body.staffId + " ID-тай ажилтан байхгүй байна", 400);
-	}
-
 	const movie = await Movie.findById(req.body.movieId);
 
 	if (!movie) {
 		throw new Error(req.body.movieId + " ID-тай кино байхгүй байна", 400);
+	}
+
+	const staff = await Staff.findById(req.userId);
+
+	if (!staff) {
+		throw new Error(req.body.userId + " ID-тай ажилтан байхгүй байна", 400);
 	}
 
 	const hall = await Hall.findById(req.body.hallId);
@@ -45,6 +45,25 @@ exports.createSchedule = asyncHandler(async (req, res, next) => {
 	if (!hall) {
 		throw new Error(req.body.hallId + " ID-тай кино танхим байна", 400);
 	}
+
+	//Дуусах хугацааг тодорхойлох
+	let start = new Date(req.body.startTime);
+	//20 минутын зайтай байна
+	let end = new Date(start.getTime() + movie.duration * 20 * 60 * 1000);
+
+	req.body.startTime = start;
+	req.body.endTime = end;
+
+	console.log(req.body);
+	//Хуваарь давхцаж байгаа эсэхийг шалгах
+	let sch = Schedule.checkSchedule(start, end, req.body.hallId);
+
+	if (sch) {
+		throw new Error("Аль нэг хуваарь давхцаж байна", 400);
+	}
+
+	//хадгалсан хэрэглэгч тодорхойлох
+	req.body.staffId = req.userId;
 
 	const schedule = await Schedule.create(req.body);
 

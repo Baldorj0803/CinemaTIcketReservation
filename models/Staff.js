@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const StaffSchema = mongoose.Schema({
 	fName: {
@@ -23,15 +25,52 @@ const StaffSchema = mongoose.Schema({
 	role: {
 		type: String,
 		required: [true, "Албан тушаалаа сонгоно уу"],
-		enum: ["staff", "manager"],
+		enum: ["staff", "manager", "admin"],
+	},
+	branchId: {
+		type: mongoose.Schema.ObjectId,
+		ref: "Branch",
+		required: true,
 	},
 	staffHomeAdd: String,
 	staffPhoneNum: Number,
-	password: String,
-	mail: {
+	password: {
+		type: String,
+		required: [true, "Нууц үгээ оруулна уу"],
+		minlength: 4,
+		select: false, // энэ талбарыг front-end рүү явуулахгүй
+	},
+	email: {
 		type: String,
 		required: [true, "Е-мэйл хаягаа оруулна уу"],
 	},
+	photo: {
+		type: String,
+		default: "no-photo-staff.jpg",
+	},
+	resetPasswordToken: String,
+	resetPasswordExpire: Date,
+});
+
+StaffSchema.methods.getJsonWebToken = function () {
+	const token = jwt.sign(
+		{ id: this._id, role: this.role },
+		process.env.JWT_SECRET,
+		{
+			expiresIn: process.env.JWT_EXPIRESIN,
+		}
+	);
+	return token;
+};
+
+StaffSchema.methods.checkPassword = async function (password) {
+	return await bcrypt.compare(password, this.password);
+};
+
+StaffSchema.pre("save", async function () {
+	//Ажилтан create хийхэд нууц үгийг bcrypt лэж өөрөөр хадгалах
+	const salt = await bcrypt.genSalt(10);
+	this.password = await bcrypt.hash(this.password, salt);
 });
 
 module.exports = mongoose.model("Staff", StaffSchema);

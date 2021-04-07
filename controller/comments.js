@@ -1,6 +1,6 @@
 const Comment = require("../models/Comment");
 const asyncHandler = require("express-async-handler");
-const Error = require("../utils/MyError");
+const Error = require("../utils/Error");
 const User = require("../models/User");
 const Movie = require("../models/Movie");
 
