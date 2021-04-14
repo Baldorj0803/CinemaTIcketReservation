@@ -24,6 +24,8 @@ const OrderSchema = new mongoose.Schema(
 );
 
 OrderSchema.statics.checkOrder = async function (st, schId) {
+	console.log(st);
+
 	const obj = await this.aggregate([
 		{
 			$project: { "seats._id": 0 },

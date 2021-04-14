@@ -176,7 +176,7 @@ ScheduleSchema.statics.comingSoon = async function (limit, skip) {
 		},
 		{
 			$sort: {
-				"movie.movieName": 1,
+				"movie.createdDate": 1,
 			},
 		},
 		{
