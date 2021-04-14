@@ -1,50 +1,162 @@
 const mongoose = require("mongoose");
 
-const MovieSchema = new mongoose.Schema({
-	movName: {
-		type: String,
-		required: [true, "Киноны нэрийг оруулна уу"],
-		trim: true,
-		maxlength: [100, "Киноны нэрны дээд тал 100 тэмдэгт байх ёстой"],
+const MovieSchema = new mongoose.Schema(
+	{
+		movName: {
+			type: String,
+			required: [true, "Киноны нэрийг оруулна уу"],
+			trim: true,
+			maxlength: [100, "Киноны нэрны дээд тал 100 тэмдэгт байх ёстой"],
+		},
+		movAuthor: {
+			type: String,
+			required: [true, "Киноны зохиолчийг оруулна уу"],
+			trim: true,
+		},
+		movDesc: {
+			type: String,
+			trim: true,
+			required: [true, "Киноны тайлбарыг оруулна уу"],
+			maxlength: [5000, "Тайлбарын дээд тал 5000 тэмдэгт байх ёстой"],
+		},
+		ageLimit: {
+			type: Number,
+			required: [true, "Киноны насны хязгаарыг оруулна уу"],
+			min: [1, "Насны хязгаар буруу байна"],
+		},
+		createdDate: {
+			type: Number,
+			required: [true, "Киноны бүтсэн огноог оруулна уу"],
+		},
+		duration: {
+			type: Number,
+			required: [true, "Киноны үргэлжлэх хугацааг оруулна уу"],
+		},
+		averageRating: {
+			type: Number,
+			min: [1, "Рейтинг хамгийн багадаа 1 байх ёстой"],
+			max: [10, "Райтиг хамгийн ихдээ 10 байх ёстой"],
+		},
+		photo: {
+			type: String,
+			default: "no-photo-movie.jpg",
+		},
+		movGenre: {
+			type: mongoose.Schema.ObjectId,
+			ref: "Category",
+			required: [true, "Киноны төрөлийг оруулна уу"],
+		},
 	},
-	movAuthor: {
-		type: String,
-		required: [true, "Киноны зохиолчийг оруулна уу"],
-		trim: true,
-	},
-	movDesc: {
-		type: String,
-		trim: true,
-		required: [true, "Киноны тайлбарыг оруулна уу"],
-		maxlength: [5000, "Тайлбарын дээд тал 5000 тэмдэгт байх ёстой"],
-	},
-	ageLimit: {
-		type: Number,
-		required: [true, "Киноны насны хязгаарыг оруулна уу"],
-		min: [1, "Насны хязгаар буруу байна"],
-	},
-	createdDate: {
-		type: Date,
-		required: [true, "Киноны бүтсэн огноог оруулна уу"],
-	},
-	duration: {
-		type: Number,
-		required: [true, "Киноны үргэлжлэх хугацааг оруулна уу"],
-	},
-	averageRating: {
-		type: Number,
-		min: [1, "Рейтинг хамгийн багадаа 1 байх ёстой"],
-		max: [10, "Райтиг хамгийн ихдээ 10 байх ёстой"],
-	},
-	photo: {
-		type: String,
-		default: "no-photo-movie.jpg",
-	},
-	movGenre: {
-		type: mongoose.Schema.ObjectId,
-		ref: "Category",
-		required: [true, "Киноны төрөлийг оруулна уу"],
-	},
+	{
+		toJSON: { virtuals: true },
+		toObject: { virtuals: true },
+	}
+);
+
+MovieSchema.virtual("schedules", {
+	ref: "Schedule",
+	localField: "_id",
+	foreignField: "movieId",
+	justOne: false,
 });
+MovieSchema.virtual("category", {
+	ref: "Category",
+	localField: "movGenre",
+	foreignField: "_id",
+	justOne: false,
+	select: "name",
+});
+
+MovieSchema.statics.nowPlaying = async function (limit, skip, start, end) {
+	console.log("Одоо гарч буй", start, end);
+
+	const obj = await this.aggregate([
+		{
+			$lookup: {
+				from: "schedules",
+				localField: "_id",
+				foreignField: "movieId",
+				as: "schedules",
+			},
+		},
+		{
+			$match: {
+				schedules: { $ne: [] },
+			},
+		},
+		{
+			$unwind: {
+				path: "$schedules",
+			},
+		},
+		{
+			$match: {
+				$and: [
+					{
+						"schedules.startTime": { $gte: start },
+					},
+					{
+						"schedules.startTime": { $lt: end },
+					},
+				],
+			},
+		},
+
+		{
+			$lookup: {
+				from: "halls",
+				localField: "schedules.hallId",
+				foreignField: "_id",
+				as: "hall",
+			},
+		},
+		{
+			$addFields: {
+				"schedules.hall": { $first: "$hall" },
+			},
+		},
+		{
+			$lookup: {
+				from: "branches",
+				localField: "schedules.hall.branch",
+				foreignField: "_id",
+				as: "branch",
+			},
+		},
+		{
+			$addFields: {
+				"schedules.branch": { $first: "$branch" },
+			},
+		},
+
+		{
+			$group: {
+				_id: "$_id",
+				photo: { $first: "$photo" },
+				movName: { $first: "$movName" },
+				movAuthor: { $first: "$movAuthor" },
+				duration: { $first: "$duration" },
+				createdDate: { $first: "$createdDate" },
+				ageLimit: { $first: "$ageLimit" },
+				movDesc: { $first: "$movDesc" },
+				movGenre: { $first: "$movGenre" },
+				schedules: { $push: "$schedules" },
+			},
+		},
+
+		{
+			$sort: {
+				createdDate: 1,
+			},
+		},
+		{
+			$limit: limit,
+		},
+		{
+			$skip: skip,
+		},
+	]);
+	return obj;
+};
 
 module.exports = mongoose.model("Movie", MovieSchema);

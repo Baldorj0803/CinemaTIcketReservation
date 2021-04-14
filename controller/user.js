@@ -29,6 +29,8 @@ exports.createUser = asyncHandler(async (req, res, next) => {
 
 	const token = user.getJsonWebToken();
 
+	if (user.password) user.password = null;
+
 	res.status(200).json({
 		success: true,
 		token,

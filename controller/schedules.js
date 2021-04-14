@@ -4,6 +4,8 @@ const Error = require("../utils/Error");
 const Staff = require("../models/Staff");
 const Movie = require("../models/Movie");
 const Hall = require("../models/Hall");
+const moment = require("moment");
+const date = require("date-and-time");
 
 exports.getSchedules = asyncHandler(async (req, res, next) => {
 	const schedules = await Schedule.find();
@@ -27,6 +29,7 @@ exports.getSchedule = asyncHandler(async (req, res, next) => {
 	});
 });
 
+//хуваарь үүсгэх
 exports.createSchedule = asyncHandler(async (req, res, next) => {
 	const movie = await Movie.findById(req.body.movieId);
 
@@ -46,19 +49,28 @@ exports.createSchedule = asyncHandler(async (req, res, next) => {
 		throw new Error(req.body.hallId + " ID-тай кино танхим байна", 400);
 	}
 
-	//Дуусах хугацааг тодорхойлох
-	let start = new Date(req.body.startTime);
+	// //Дуусах хугацааг тодорхойлох
+	let date = req.body.startTime.split("-").map((iNum) => parseInt(iNum));
+
+	if (date.length != 5) throw new Error("Сар өдөрөө оруулна уу", 400);
+
 	//20 минутын зайтай байна
-	let end = new Date(start.getTime() + movie.duration * 20 * 60 * 1000);
+	let add = movie.duration + 20;
+	let start = new Date(
+		Date.UTC(date[0], date[1] - 1, date[2], date[3], date[4])
+	);
+	let end = new Date(
+		Date.UTC(date[0], date[1] - 1, date[2], date[3], date[4] + add)
+	);
 
 	req.body.startTime = start;
 	req.body.endTime = end;
 
-	console.log(req.body);
 	//Хуваарь давхцаж байгаа эсэхийг шалгах
-	let sch = Schedule.checkSchedule(start, end, req.body.hallId);
+	let sch = await Schedule.checkSchedule(start, end, req.body.hallId);
+	sch ? console.log("Давхацсан хуваарь", sch) : "";
 
-	if (sch) {
+	if (sch.length !== 0) {
 		throw new Error("Аль нэг хуваарь давхцаж байна", 400);
 	}
 

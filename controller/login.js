@@ -31,6 +31,8 @@ exports.login = asyncHandler(async (req, res, next) => {
 		throw new Error("Имэйл болон нууц үг буруу байна", 401);
 	}
 
+	if (user.password) user.password = null;
+
 	res.status(200).json({
 		success: true,
 		token: user.getJsonWebToken(),

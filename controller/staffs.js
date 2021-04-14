@@ -34,6 +34,8 @@ exports.createStaff = asyncHandler(async (req, res, next) => {
 
 	const staff = await Staff.create(req.body);
 
+	if (staff.password) staff.password = null;
+
 	res.status(200).json({
 		success: true,
 		data: staff,

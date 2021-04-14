@@ -5,15 +5,16 @@ const jwt = require("jsonwebtoken");
 const UserSchema = new mongoose.Schema({
 	name: {
 		type: String,
-		required: [true, "Овогоо оруулна уу?"],
-		maxlength: [30, "Овогийн урт дээд тал нь 30 тэмдэгт"],
+		required: [true, "Нэрээ оруулна уу?"],
+		maxlength: [30, "Нэрний урт дээд тал нь 30 тэмдэгт"],
 		trim: true,
 	},
 	password: {
 		type: String,
+		select: false,
 		required: [true, "Нууц үгээ оруулна уу"],
 		minlength: 4,
-		select: false, // энэ талбарыг front-end рүү явуулахгүй
+		// энэ талбарыг front-end рүү явуулахгүй
 	},
 	role: {
 		type: String,
@@ -22,29 +23,29 @@ const UserSchema = new mongoose.Schema({
 	},
 	email: {
 		type: String,
-		required: [true, "Хэрэглэгчийн имэйл хаягийг оруулж өгнө үү"],
 		unique: true,
+		required: [true, "Хэрэглэгчийн имэйл хаягийг оруулж өгнө үү"],
 		match: [
 			/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
 			"Имэйл хаяг буруу байна.",
 		],
 	},
-	age: {
-		type: Number,
-		required: [true, "Насаа оруулж өгнө үү"],
-	},
-	rNum: {
-		type: String,
-		unique: true,
-		required: [true, "Регистерийн дугаар аа оруулна уу"],
+	// age: {
+	// 	type: Number,
+	// 	// required: [true, "Насаа оруулж өгнө үү"],
+	// },
+	// rNum: {
+	// 	type: String,
+	// 	// unique: true,
+	// 	// required: [true, "Регистерийн дугаар аа оруулна уу"],
 
-		validate: {
-			validator: function (v) {
-				return v.length === 10;
-			},
-			message: (props) => `${props.value} форматын алдаатай байна`,
-		},
-	},
+	// 	// validate: {
+	// 	// 	validator: function (v) {
+	// 	// 		return v.length === 10;
+	// 	// 	},
+	// 	// 	message: (props) => `${props.value} форматын алдаатай байна`,
+	// 	// },
+	// },
 	phoneNum: Number,
 	photo: {
 		type: String,
