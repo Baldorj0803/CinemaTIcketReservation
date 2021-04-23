@@ -17,7 +17,7 @@ exports.getComment = asyncHandler(async (req, res, next) => {
 	const comment = await Comment.findById(req.params.id);
 
 	if (!comment) {
-		throw new MyError(req.params.id + " ID-тэй сэтгэгдэл байхгүй!", 400);
+		throw new Error(req.params.id + " ID-тэй сэтгэгдэл байхгүй!", 400);
 	}
 
 	res.status(200).json({
@@ -67,7 +67,7 @@ exports.deleteComment = asyncHandler(async (req, res, next) => {
 	const comment = await Comment.findByIdAndDelete(req.params.id);
 
 	if (!comment) {
-		throw new MyError(req.params.id + " ID-тэй сэтгэгдэл байхгүйээээ.", 400);
+		throw new Error(req.params.id + " ID-тэй сэтгэгдэл байхгүйээээ.", 400);
 	}
 
 	res.status(200).json({

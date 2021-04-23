@@ -25,7 +25,7 @@ const StaffSchema = mongoose.Schema({
 	role: {
 		type: String,
 		required: [true, "Албан тушаалаа сонгоно уу"],
-		enum: ["staff", "manager", "admin"],
+		enum: ["manager", "admin"],
 	},
 	branchId: {
 		type: mongoose.Schema.ObjectId,
@@ -42,6 +42,7 @@ const StaffSchema = mongoose.Schema({
 	},
 	email: {
 		type: String,
+		unique: true,
 		required: [true, "Е-мэйл хаягаа оруулна уу"],
 	},
 	photo: {

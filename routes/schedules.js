@@ -10,12 +10,15 @@ const {
 } = require("../controller/schedules");
 const { protect, authorize } = require("../middleware/protect");
 
-router.route("/").get(getSchedules).post(protect, createSchedule);
+router
+	.route("/")
+	.get(protect, authorize("manager"), getSchedules)
+	.post(protect, createSchedule);
 
 router
 	.route("/:id")
 	.get(getSchedule)
-	.put(updateSchedule)
-	.delete(deleteSchedule);
+	.put(protect, authorize("manager"), updateSchedule)
+	.delete(protect, authorize("manager"), deleteSchedule);
 
 module.exports = router;

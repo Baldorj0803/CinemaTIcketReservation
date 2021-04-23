@@ -11,17 +11,22 @@ const {
 	uploadMoviePhoto,
 	getMoviesNow,
 	getMoviesComingSoon,
+	createMovieWithPhoto,
 } = require("../controller/movies");
 
-router.route("/").get(getMovies).post(protect, authorize("staff"), createMovie);
+router
+	.route("/")
+	.get(getMovies)
+	.post(protect, authorize("manager"), createMovieWithPhoto);
+// .post(protect, authorize("manager"), createMovie);
 router.route("/playing").get(getMoviesNow);
 router.route("/coming-soon").get(getMoviesComingSoon);
 
 router
 	.route("/:id")
 	.get(getMovie)
-	.put(protect, authorize("staff"), updateMovie)
-	.delete(protect, authorize("staff"), deleteMovie);
+	.put(protect, authorize("manager"), updateMovie)
+	.delete(protect, authorize("manager"), deleteMovie);
 
 router.route("/:id/photo").put(uploadMoviePhoto);
 

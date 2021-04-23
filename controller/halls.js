@@ -28,7 +28,7 @@ exports.getHall = asyncHandler(async (req, res, next) => {
 	});
 });
 exports.createHall = asyncHandler(async (req, res, next) => {
-	const branch = await Branch.findById(req.body.branchId);
+	const branch = await Branch.findById(req.body.branch);
 
 	if (!branch) {
 		throw new Error(req.body.branchId + " ID-тай салбар байхгүй байна", 400);

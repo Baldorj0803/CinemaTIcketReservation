@@ -2,6 +2,7 @@ const Staff = require("../models/Staff");
 const Error = require("../utils/Error");
 const asyncHandler = require("express-async-handler");
 const Branch = require("../models/Branch");
+const User = require("../models/User");
 
 exports.getStaffs = asyncHandler(async (req, res, next) => {
 	const staffs = await Staff.find();
@@ -12,6 +13,10 @@ exports.getStaffs = asyncHandler(async (req, res, next) => {
 });
 
 exports.getStaff = asyncHandler(async (req, res, next) => {
+	if (req.userId !== req.params.id) {
+		throw new Error("Хэрэглэгч байхгүй!", 400);
+	}
+
 	const staff = await Staff.findById(req.params.id);
 
 	if (!staff) {
@@ -26,6 +31,13 @@ exports.getStaff = asyncHandler(async (req, res, next) => {
 
 //register
 exports.createStaff = asyncHandler(async (req, res, next) => {
+	const user = await User.find({ email: req.body.email });
+	console.log(user);
+
+	if (user.length > 0) {
+		throw new Error("Имэйл бүртгэгдсэн байна", 400);
+	}
+
 	const branch = await Branch.findById(req.body.branchId);
 
 	if (!branch) {

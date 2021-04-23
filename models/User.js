@@ -30,22 +30,6 @@ const UserSchema = new mongoose.Schema({
 			"Имэйл хаяг буруу байна.",
 		],
 	},
-	// age: {
-	// 	type: Number,
-	// 	// required: [true, "Насаа оруулж өгнө үү"],
-	// },
-	// rNum: {
-	// 	type: String,
-	// 	// unique: true,
-	// 	// required: [true, "Регистерийн дугаар аа оруулна уу"],
-
-	// 	// validate: {
-	// 	// 	validator: function (v) {
-	// 	// 		return v.length === 10;
-	// 	// 	},
-	// 	// 	message: (props) => `${props.value} форматын алдаатай байна`,
-	// 	// },
-	// },
 	phoneNum: Number,
 	photo: {
 		type: String,

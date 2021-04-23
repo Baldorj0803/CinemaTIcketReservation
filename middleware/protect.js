@@ -6,7 +6,6 @@ const MyError = require("../utils/Error");
 //tokenoor newtersniig shalgax
 exports.protect = asyncHandler(async (req, res, next) => {
 	let token;
-
 	if (req.headers.authorization) {
 		token = req.headers.authorization.split(" ")[1];
 	} else if (req.cookies) {

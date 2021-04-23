@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Error = require("../utils/Error");
 const asyncHandler = require("express-async-handler");
+const Staff = require("../models/Staff");
 
 exports.getUsers = asyncHandler(async (req, res, next) => {
 	const users = await User.find();
@@ -11,6 +12,10 @@ exports.getUsers = asyncHandler(async (req, res, next) => {
 });
 
 exports.getUser = asyncHandler(async (req, res, next) => {
+	if (req.userId !== req.params.id) {
+		throw new Error("Хэрэглэгч байхгүй!", 400);
+	}
+
 	const user = await User.findById(req.params.id);
 
 	if (!user) {
@@ -25,6 +30,12 @@ exports.getUser = asyncHandler(async (req, res, next) => {
 
 //register
 exports.createUser = asyncHandler(async (req, res, next) => {
+	const staff = await Staff.find({ email: req.body.email });
+
+	if (staff.length !== 0) {
+		throw new Error("Имэйл бүртгэгдсэн байна", 400);
+	}
+
 	const user = await User.create(req.body);
 
 	const token = user.getJsonWebToken();

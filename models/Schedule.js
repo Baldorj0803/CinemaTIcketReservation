@@ -34,6 +34,9 @@ const ScheduleSchema = new mongoose.Schema(
 			type: Number,
 			required: [true, "Хүүхдийн тасалбарын үнийг оруулна уу"],
 		},
+		branch: {
+			type: String,
+		},
 	},
 	{
 		toJSON: { virtuals: true },
@@ -170,6 +173,11 @@ ScheduleSchema.statics.comingSoon = async function (limit, skip) {
 			},
 		},
 		{
+			$match: {
+				movie: { $ne: [] },
+			},
+		},
+		{
 			$project: {
 				movie: { $arrayElemAt: ["$movie", 0] },
 			},
@@ -180,10 +188,10 @@ ScheduleSchema.statics.comingSoon = async function (limit, skip) {
 			},
 		},
 		{
-			$limit: limit,
+			$skip: skip,
 		},
 		{
-			$skip: skip,
+			$limit: limit,
 		},
 	]);
 
@@ -201,6 +209,18 @@ ScheduleSchema.virtual("hall", {
 	localField: "_id",
 	foreignField: "scheduleId",
 	justOne: false,
+});
+
+ScheduleSchema.pre("save", async function () {
+	const resultHall = await this.model("Hall")
+		.findById(this.hallId)
+		.populate("branch");
+	if (resultHall) this.branch = resultHall.branch.branchName;
+});
+ScheduleSchema.pre("remove", async function () {
+	console.log("removing...");
+	const r = await this.model("Order").deleteMany({ scheduleId: this._id });
+	next();
 });
 
 module.exports = mongoose.model("Schedule", ScheduleSchema);

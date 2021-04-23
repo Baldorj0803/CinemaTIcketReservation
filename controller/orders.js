@@ -1,10 +1,13 @@
 const Order = require("../models/Order");
 const asyncHandler = require("express-async-handler");
-const MyError = require("../utils/Error");
+const Error = require("../utils/Error");
 const User = require("../models/User");
 const Schedule = require("../models/Schedule");
-
+const Movie = require("../models/Movie");
+const paginate = require("../utils/paginate");
+const sendEmail = require("../utils/email");
 exports.createOrder = asyncHandler(async (req, res) => {
+	console.log("irsen zahialga", req.body);
 	const user = await User.findById(req.userId);
 
 	if (!user) {
@@ -31,7 +34,9 @@ exports.createOrder = asyncHandler(async (req, res) => {
 	let Row = schedule.hallId.row,
 		Column = schedule.hallId.column;
 
-	//Захиалсан суудал үнэн зөв эсэхийг шалгах
+	console.log(Row, Column);
+
+	// Захиалсан суудал үнэн зөв эсэхийг шалгах
 	let n = null;
 	for (let i = 0; i < seats.length; i++) {
 		if (
@@ -40,42 +45,95 @@ exports.createOrder = asyncHandler(async (req, res) => {
 			seats[i].column > Column ||
 			seats[i].column <= 0
 		) {
-			throw new MyError("Алдаатай захиалга байна!", 400);
-		}
-		if (n !== null && i < seats.length) {
-			if (n === seats[i].row) {
-				n = seats[i].row;
-				for (let j = i; j < seats.length; j++) {
-					if (seats[i - 1].column === seats[j].column) {
-						throw new MyError("Алдаатай захиалга байна", 400);
-					}
-				}
-			}
-		} else {
-			n = seats[0].row;
-			continue;
+			throw new Error("Алдаатай захиалга байна!", 400);
 		}
 	}
 
-	//давхцсан эсэхийг шалгах js
-	// let sta = req.body.seats;
-	// schedule.orders.map((order) => {
-	// 	order.seats.map((seat) => {
-	// 		sta.map((st) => {
-	// 			if (st.row == seat.row && st.column === seat.column) {
-	// 				throw new MyError("Аль нэг хуваарь давхцаж байна", 400);
-	// 			}
-	// 		});
-	// 	});
-	// });
-
-	const obj = await Order.checkOrder(req.body.seats, req.body.scheduleId);
-
-	if (obj.length !== 0) {
-		throw new MyError("Аль нэг суудал давхцаж байна", 400);
-	}
-
+	const date = new Date();
+	date.setHours(date.getHours() + 8);
+	req.body.date = date;
 	const order = await Order.create(req.body);
+
+	setTimeout(async function () {
+		const o = await Order.findOne({
+			_id: order._id,
+			status: false,
+		});
+
+		if (o) {
+			o.remove({}, function (err, result) {
+				if (err) {
+					throw new Error("Захиалга устгахад алдаа гарлаа", 400);
+				} else {
+					console.log("Захиалга устгагдлаа", result);
+					console.log("Өдөр", date);
+				}
+			});
+		}
+	}, 10 * 60 * 1000);
+
+	res.status(200).json({
+		success: true,
+		data: order,
+		date,
+	});
+});
+
+exports.getOrders = asyncHandler(async (req, res) => {
+	const select = req.query.select;
+	const sort = req.query.sort;
+	const page = parseInt(req.query.page) || 1;
+	const limit = parseInt(req.query.limit) || 10;
+
+	["select", "sort", "page", "limit"].forEach((el) => delete req.query[el]);
+
+	const pagination = await paginate(page, limit, Order);
+
+	const orders = await Order.find(req.query, select)
+		.sort(sort)
+		.skip(pagination.start - 1)
+		.limit(limit)
+		.populate("userId")
+		.populate("scheduleId");
+
+	res.status(200).json({
+		success: true,
+		data: orders,
+		pagination,
+	});
+});
+
+exports.orderConfirm = asyncHandler(async (req, res) => {
+	if (!req.body.email) {
+		throw new Error("Хүлээн авах имэйл ээ оруулна уу", 400);
+	}
+	req.body.status = true;
+
+	const order = await Order.findByIdAndUpdate(
+		{ _id: req.params.id, userId: req.userId },
+		req.body,
+		{
+			new: true,
+			runValidators: true,
+		}
+	).populate("scheduleId");
+
+	if (!order) {
+		throw new Error(req.params.id + " ID -тай захиалга байхгүй байна");
+	}
+
+	const message = `Тасалбар амжилттай захиаллаа. <br><br>  Хаана: ${
+		order.scheduleId.branch
+	}
+	<br><br> Хэзээ: ${
+		order.scheduleId.startTime
+	}<br><br> Төлсөн дүн: ${JSON.stringify(order.totalPrice)}`;
+
+	const info = await sendEmail({
+		email: req.body.email,
+		subject: "Тасалбар захиалах",
+		message,
+	});
 
 	res.status(200).json({
 		success: true,
@@ -83,11 +141,34 @@ exports.createOrder = asyncHandler(async (req, res) => {
 	});
 });
 
-exports.getOrders = asyncHandler(async (req, res) => {
-	const orders = await Order.find().populate({
-		path: "scheduleId",
-		select: "hallId",
+exports.deleteOrder = asyncHandler(async (req, res, next) => {
+	const order = await Order.findOneAndDelete({
+		_id: req.params.id,
+		status: false,
 	});
+	if (!order) {
+		throw new Error(req.params.id + " ID -тай захиалга байхгүй байна");
+	}
+
+	res.status(200).json({
+		success: true,
+		data: req.params.id + " ID-тэй захиалга устгагдлаа",
+	});
+});
+
+exports.myoders = asyncHandler(async (req, res, next) => {
+	console.log(req.userId);
+	const orders = await Order.find({
+		userId: req.userId,
+		status: true,
+	})
+		.populate("scheduleId")
+		.sort({ date: 1 });
+	if (!orders) {
+		throw new Error("Захиалга байхгүй байна", 400);
+	}
+
+	// const movie= await Movie.findById(orders.)
 
 	res.status(200).json({
 		success: true,
