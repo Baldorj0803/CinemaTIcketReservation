@@ -1,4 +1,9 @@
 const nodemailer = require("nodemailer");
+const fs = require("fs");
+const Hogan = require("hogan.js");
+
+let template = fs.readFileSync("./views/email.hjs", "utf-8");
+let compiledTemplate = Hogan.compile(template);
 
 // async..await is not allowed in global scope, must use a wrapper
 const sendEmail = async (options) => {
@@ -19,7 +24,8 @@ const sendEmail = async (options) => {
 		to: options.email, // list of receivers
 		subject: options.subject, // Subject line
 		// text: "Hello world?", // plain text body
-		html: options.message, // html body
+		// html: options.message, // html body
+		html: compiledTemplate.render(options.message),
 	});
 
 	// console.log("Message sent: %s", info.messageId);

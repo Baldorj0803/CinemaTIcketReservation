@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { protect, authorize } = require("../middleware/protect");
 
 const {
 	getComments,
@@ -10,7 +11,8 @@ const {
 } = require("../controller/comments");
 
 // api/v1/comments/
-router.route("/").get(getComments).post(createComment);
+router.route("/").post(protect, createComment);
+router.route("/movie/:movieId").get(getComments);
 router.route("/:id").get(getComment).put(updateComment).delete(deleteComment);
 
 module.exports = router;

@@ -75,68 +75,6 @@ ScheduleSchema.statics.checkSchedule = async function (start, end, hall) {
 	return obj;
 };
 
-// Тун удахгүй гарах киног аггрегате ашиглан шүүх
-//     -------Хураахад эхэнд гарах учир доод функцийн толгойг эхэнд тавив
-// Одоо гарч буй киног аггрегате ашиглан шүүх
-// ScheduleSchema.statics.nowmovies = async function (limit, skip) {
-// 	let now = new Date();
-// 	now.setHours(now.getHours() + 8);
-
-// 	let start = new Date(new Date(now).setHours(00, 00, 00));
-// 	let end = new Date(new Date(now).setHours(23, 59, 59));
-// 	start.setHours(start.getHours() + 8);
-// 	end.setHours(end.getHours() + 8);
-
-// 	console.log("Одоо гарч буй", start, end);
-
-// 	const obj = await this.aggregate([
-// 		{
-// 			$match: {
-// 				startTime: {
-// 					$gte: start,
-// 					$lt: end,
-// 				},
-// 			},
-// 		},
-// 		{
-// 			$group: {
-// 				_id: "$movieId",
-// 				count: {
-// 					$sum: 1,
-// 				},
-// 				schedules: { $push: "$startTime" },
-// 			},
-// 		},
-// 		{
-// 			$lookup: {
-// 				from: "movies",
-// 				localField: "_id",
-// 				foreignField: "_id",
-// 				as: "movie",
-// 			},
-// 		},
-// 		{
-// 			$project: {
-// 				movie: { $arrayElemAt: ["$movie", 0] },
-// 				schedules: 1,
-// 			},
-// 		},
-
-// 		{
-// 			$sort: {
-// 				"movie.movName": 1,
-// 			},
-// 		},
-// 		{
-// 			$limit: limit,
-// 		},
-// 		{
-// 			$skip: skip,
-// 		},
-// 	]);
-// 	return obj;
-// };
-
 ScheduleSchema.statics.comingSoon = async function (limit, skip) {
 	let now = new Date();
 	now.setHours(now.getHours() + 8);
@@ -187,12 +125,8 @@ ScheduleSchema.statics.comingSoon = async function (limit, skip) {
 				"movie.createdDate": 1,
 			},
 		},
-		{
-			$skip: skip,
-		},
-		{
-			$limit: limit,
-		},
+		{ $skip: skip },
+		{ $limit: limit },
 	]);
 
 	return obj;
@@ -220,7 +154,6 @@ ScheduleSchema.pre("save", async function () {
 ScheduleSchema.pre("remove", async function () {
 	console.log("removing...");
 	const r = await this.model("Order").deleteMany({ scheduleId: this._id });
-	next();
 });
 
 module.exports = mongoose.model("Schedule", ScheduleSchema);

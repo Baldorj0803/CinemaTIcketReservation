@@ -25,12 +25,12 @@ dotenv.config({ path: "./config/config.env" });
 connectDB();
 
 const app = express();
+app.set("view engine", "hjs");
 
 //body parser
 app.use(express.json());
 app.use(fileupload());
 app.use(cors());
-// app.use("/upload", express.static("public"));
 app.use("/static", express.static(path.join(__dirname, "public")));
 app.use(logger);
 app.use(morgan("dev"));

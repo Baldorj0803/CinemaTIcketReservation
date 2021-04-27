@@ -9,6 +9,8 @@ const Category = require("../models/Category");
 //Одоо гарч буй
 exports.getMoviesNow = asyncHandler(async (req, res) => {
 	let category;
+	console.log(req.query);
+
 	if (req.query.category && req.query.category !== "") {
 		category = req.query.category.split(" ");
 		console.log(category);
@@ -17,7 +19,6 @@ exports.getMoviesNow = asyncHandler(async (req, res) => {
 		console.log("Бүх категориор");
 	}
 	const search = req.query.search || "";
-	console.log(search);
 	let start, end;
 	if (req.query.startTime && req.query.endTime) {
 		console.log("----------");
@@ -127,7 +128,7 @@ exports.getMovies = asyncHandler(async (req, res, next) => {
 	const pagination = await paginate(page, limit, Movie);
 
 	const movies = await Movie.find(req.query, select)
-		.sort(sort)
+		.sort({ movName: 1 })
 		.skip(pagination.start - 1)
 		.limit(limit);
 
@@ -137,27 +138,6 @@ exports.getMovies = asyncHandler(async (req, res, next) => {
 		pagination,
 	});
 });
-// exports.getMovies = asyncHandler(async (req, res, next) => {
-// 	const select = req.query.select;
-// 	const sort = req.query.sort;
-// 	const page = parseInt(req.query.page) || 1;
-// 	const limit = parseInt(req.query.limit) || 12;
-
-// 	["select", "sort", "page", "limit"].forEach((el) => delete req.query[el]);
-
-// 	const pagination = await paginate(page, limit, Movie);
-
-// 	const movies = await Movie.find(req.query, select)
-// 		.sort(sort)
-// 		.skip(pagination.start - 1)
-// 		.limit(limit);
-
-// 	res.status(200).json({
-// 		success: true,
-// 		data: movies,
-// 		pagination,
-// 	});
-// });
 
 exports.getMovie = asyncHandler(async (req, res, next) => {
 	let start = new Date();
@@ -178,10 +158,6 @@ exports.getMovie = asyncHandler(async (req, res, next) => {
 		throw new MyError(req.params.id + " ID-тэй кино байхгүй!", 400);
 	}
 
-	// movie.schedules.map((el) => {
-	// 	el.hallId = "branch";
-	// 	el.push
-	// });
 	res.status(200).json({
 		success: true,
 		data: movie,

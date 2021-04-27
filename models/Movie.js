@@ -32,11 +32,6 @@ const MovieSchema = new mongoose.Schema(
 			type: Number,
 			required: [true, "Киноны үргэлжлэх хугацааг оруулна уу"],
 		},
-		averageRating: {
-			type: Number,
-			min: [1, "Рейтинг хамгийн багадаа 1 байх ёстой"],
-			max: [10, "Райтиг хамгийн ихдээ 10 байх ёстой"],
-		},
 		photo: {
 			type: String,
 			default: "no-photo-movie.jpg",
@@ -135,6 +130,9 @@ MovieSchema.statics.nowPlaying = async function (
 
 	caterogy.map((c) => cat.push(new mongoose.Types.ObjectId(c._id ? c._id : c)));
 
+	console.log("search", search);
+	console.log("category", cat);
+
 	const obj = await this.aggregate([
 		{
 			$match: {
@@ -224,7 +222,7 @@ MovieSchema.statics.nowPlaying = async function (
 
 		{
 			$sort: {
-				createdDate: 1,
+				movName: 1,
 			},
 		},
 		{

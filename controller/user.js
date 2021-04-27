@@ -49,36 +49,6 @@ exports.createUser = asyncHandler(async (req, res, next) => {
 	});
 });
 
-//login
-// exports.loginUser = asyncHandler(async (req, res, next) => {
-// 	login("user");
-// 	//email password орж ирсэн эсэхийг шалгах
-// 	const { email, password } = req.body;
-// 	if (!email || !password) {
-// 		throw new Error("Имэйл болон нууц үгээ дамжуулна уу", 400);
-// 	}
-
-// 	//Имэйл хайх
-// 	const user = await User.findOne({ email }).select("+password"); //passwordiig awahgvi gj tohiruulsan bolowch .select eer nemj bolno
-
-// 	if (!user) {
-// 		throw new Error("Имэйл болон нууц үг буруу байна", 401);
-// 	}
-
-// 	//нууц үг шалгах
-// 	const ok = await user.checkPassword(password);
-
-// 	if (!ok) {
-// 		throw new Error("Имэйл болон нууц үг буруу байна", 401);
-// 	}
-
-// 	res.status(200).json({
-// 		success: true,
-// 		token: user.getJsonWebToken(),
-// 		data: user,
-// 	});
-// });
-
 exports.updateUser = asyncHandler(async (req, res, next) => {
 	const user = await User.findByIdAndUpdate(req.params.id, req.body, {
 		new: true,

@@ -36,7 +36,6 @@ const OrderSchema = new mongoose.Schema(
 		},
 		movieName: String,
 	},
-	// { timestamps: true },
 	{ toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 

@@ -6,6 +6,7 @@ const Schedule = require("../models/Schedule");
 const Movie = require("../models/Movie");
 const paginate = require("../utils/paginate");
 const sendEmail = require("../utils/email");
+const Hall = require("../models/Hall");
 exports.createOrder = asyncHandler(async (req, res) => {
 	console.log("irsen zahialga", req.body);
 	const user = await User.findById(req.userId);
@@ -116,21 +117,34 @@ exports.orderConfirm = asyncHandler(async (req, res) => {
 			new: true,
 			runValidators: true,
 		}
-	).populate("scheduleId");
+	)
+		.populate("scheduleId")
+		.populate("userId");
 
 	if (!order) {
 		throw new Error(req.params.id + " ID -тай захиалга байхгүй байна");
 	}
 
-	const message = `Тасалбар амжилттай захиаллаа. <br><br>  Хаана: ${
-		order.scheduleId.branch
-	}
-	<br><br> Хэзээ: ${
-		order.scheduleId.startTime
-	}<br><br> Төлсөн дүн: ${JSON.stringify(order.totalPrice)}`;
+	const hall = await Hall.findById(order.scheduleId.hallId);
+
+	let sit = "";
+	order.seats.forEach((e) => {
+		sit = sit + e.row + "-" + e.column + " ";
+	});
+
+	const message = {
+		id: order._id,
+		branch: order.scheduleId.branch,
+		sitNumber: sit,
+		time: order.scheduleId.startTime.toString().slice(16, 21),
+		hall: hall.hallNumber,
+		totalPrice: order.totalPrice,
+		movie: order.movieName,
+		date: order.scheduleId.startTime.toString().slice(0, 15),
+	};
 
 	const info = await sendEmail({
-		email: req.body.email,
+		email: order.userId.email,
 		subject: "Тасалбар захиалах",
 		message,
 	});
