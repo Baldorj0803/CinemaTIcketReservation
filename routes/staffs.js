@@ -10,11 +10,14 @@ const {
 } = require("../controller/staffs");
 const { protect, authorize } = require("../middleware/protect");
 
-router.route("/").get(getStaffs).post(createStaff);
+router
+	.route("/")
+	.get(protect, authorize("admin"), getStaffs)
+	.post(protect, authorize("admin"), createStaff);
 router
 	.route("/:id")
 	.get(protect, getStaff)
-	.put(updateStaff)
-	.delete(deleteStaff);
+	.put(protect, authorize("admin"), updateStaff)
+	.delete(protect, authorize("admin"), deleteStaff);
 
 module.exports = router;

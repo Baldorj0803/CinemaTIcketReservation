@@ -108,11 +108,18 @@ exports.updateComment = asyncHandler(async (req, res, next) => {
 });
 
 exports.deleteComment = asyncHandler(async (req, res, next) => {
-	const comment = await Comment.findByIdAndDelete(req.params.id);
+	// const comment = await Comment.findByIdAndDelete(req.params.id);
 
+	const comment = await Comment.findById(req.params.id);
 	if (!comment) {
 		throw new Error(req.params.id + " ID-тэй сэтгэгдэл байхгүйээээ.", 400);
 	}
+
+	if (comment.userId.toString() !== req.userId) {
+		throw new Error(" Таны сэтгэгдэл биш байна", 400);
+	}
+
+	comment.remove();
 
 	res.status(200).json({
 		success: true,

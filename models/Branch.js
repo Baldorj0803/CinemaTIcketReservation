@@ -16,7 +16,6 @@ const BranchSchema = new mongoose.Schema(
 		},
 		branchPhoneNumber: {
 			type: Number,
-			// max: [15, "Дугаар хамгийн ихдээ 10 тэмдэг байна"],
 			min: [5, "Дугаар багадаа ихдээ 5 тэмдэг байна"],
 		},
 		photo: {
@@ -32,6 +31,11 @@ BranchSchema.virtual("halls", {
 	localField: "_id",
 	foreignField: "branch",
 	justOne: false,
+});
+
+BranchSchema.pre("remove", async function (next) {
+	await this.model("Hall").deleteMany({ branch: this._id });
+	next();
 });
 
 module.exports = mongoose.model("Branch", BranchSchema);

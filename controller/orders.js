@@ -9,6 +9,10 @@ const sendEmail = require("../utils/email");
 const Hall = require("../models/Hall");
 exports.createOrder = asyncHandler(async (req, res) => {
 	console.log("irsen zahialga", req.body);
+	let seats = req.body.seats;
+	if (seats.length > 10) {
+		throw new Error("Захиалгын тоо 10 аас бага байх ёстой", 400);
+	}
 	const user = await User.findById(req.userId);
 
 	if (!user) {
@@ -31,7 +35,6 @@ exports.createOrder = asyncHandler(async (req, res) => {
 		throw new Error(req.body.scheduleId + " ID-тай хуваарь байхгүй байна", 400);
 	}
 
-	let seats = req.body.seats;
 	let Row = schedule.hallId.row,
 		Column = schedule.hallId.column;
 
@@ -105,9 +108,6 @@ exports.getOrders = asyncHandler(async (req, res) => {
 });
 
 exports.orderConfirm = asyncHandler(async (req, res) => {
-	if (!req.body.email) {
-		throw new Error("Хүлээн авах имэйл ээ оруулна уу", 400);
-	}
 	req.body.status = true;
 
 	const order = await Order.findByIdAndUpdate(
@@ -127,6 +127,7 @@ exports.orderConfirm = asyncHandler(async (req, res) => {
 
 	const hall = await Hall.findById(order.scheduleId.hallId);
 
+	//email ilgeeh message
 	let sit = "";
 	order.seats.forEach((e) => {
 		sit = sit + e.row + "-" + e.column + " ";

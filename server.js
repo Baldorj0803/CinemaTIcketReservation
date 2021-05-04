@@ -17,6 +17,8 @@ const usersRoutes = require("./routes/users");
 const schedulesRoutes = require("./routes/schedules");
 const ordersRoutes = require("./routes/orders");
 const { login } = require("./controller/login");
+const { adminStatistic } = require("./controller/statistic");
+const { protect, authorize } = require("./middleware/protect");
 const logger = require("./middleware/logger");
 const errorHandler = require("./middleware/error");
 
@@ -44,6 +46,7 @@ app.use("/api/v1/users", usersRoutes);
 app.use("/api/v1/schedules", schedulesRoutes);
 app.use("/api/v1/orders", ordersRoutes);
 app.post("/api/v1/login", login);
+app.get("/api/v1/statistic/admin", protect, authorize("admin"), adminStatistic);
 app.use(errorHandler);
 
 const server = app.listen(process.env.PORT, (req, res) => {

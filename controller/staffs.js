@@ -3,12 +3,26 @@ const Error = require("../utils/Error");
 const asyncHandler = require("express-async-handler");
 const Branch = require("../models/Branch");
 const User = require("../models/User");
+const paginate = require("../utils/paginate");
 
 exports.getStaffs = asyncHandler(async (req, res, next) => {
-	const staffs = await Staff.find();
+	const select = req.query.select;
+	const sort = req.query.sort;
+	const page = parseInt(req.query.page) || 1;
+	const limit = parseInt(req.query.limit) || 10;
+
+	["select", "sort", "page", "limit"].forEach((el) => delete req.query[el]);
+
+	const pagination = await paginate(page, limit, Staff);
+
+	const staffs = await Staff.find()
+		.limit(limit)
+		.skip(pagination.start - 1)
+		.populate("branchId");
 	res.status(200).json({
 		success: true,
 		data: staffs,
+		pagination,
 	});
 });
 

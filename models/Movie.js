@@ -43,6 +43,18 @@ const MovieSchema = new mongoose.Schema(
 				required: [true, "Киноны төрөлийг оруулна уу"],
 			},
 		],
+		averageRating: {
+			type: Number,
+			max: [10, "Дундаж үнэлгээ хамгийн ихдээ 10 байх ёстой"],
+			max: [0, "Дундаж үнэлгээ хамгийн багадаа 0 байх ёстой"],
+			default: 0,
+		},
+		ratedUser: [
+			{
+				type: mongoose.Schema.ObjectId,
+				ref: "User",
+			},
+		],
 	},
 	{
 		toJSON: { virtuals: true },
@@ -235,5 +247,10 @@ MovieSchema.statics.nowPlaying = async function (
 
 	return obj;
 };
+
+MovieSchema.pre("remove", async function (next) {
+	await this.model("Comment").deleteMany({ movieId: this._id });
+	next();
+});
 
 module.exports = mongoose.model("Movie", MovieSchema);

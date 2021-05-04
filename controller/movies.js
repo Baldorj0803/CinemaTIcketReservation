@@ -190,11 +190,13 @@ exports.updateMovie = asyncHandler(async (req, res, next) => {
 });
 
 exports.deleteMovie = asyncHandler(async (req, res, next) => {
-	const movie = await Movie.findByIdAndDelete(req.params.id);
+	const movie = await Movie.findById(req.params.id);
 
 	if (!movie) {
 		throw new MyError(req.params.id + " ID-тай кино байхгүй байна", 400);
 	}
+
+	movie.remove();
 
 	res.status(200).json({
 		success: true,

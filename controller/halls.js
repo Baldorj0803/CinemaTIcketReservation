@@ -2,16 +2,30 @@ const Hall = require("../models/Hall");
 const Error = require("../utils/Error");
 const asyncHandler = require("express-async-handler");
 const Branch = require("../models/Branch");
+const paginate = require("../utils/paginate");
 
 exports.getHalls = asyncHandler(async (req, res, next) => {
-	const halls = await Hall.find().populate({
-		path: "branch",
-		select: "branchName photo",
-	});
+	const select = req.query.select;
+	const sort = req.query.sort;
+	const page = parseInt(req.query.page) || 1;
+	const limit = parseInt(req.query.limit) || 10;
+
+	["select", "sort", "page", "limit"].forEach((el) => delete req.query[el]);
+
+	const pagination = await paginate(page, limit, Hall);
+
+	const halls = await Hall.find()
+		.limit(limit)
+		.skip(pagination.start - 1)
+		.populate({
+			path: "branch",
+			select: "branchName photo",
+		});
 
 	res.status(200).json({
 		success: true,
 		data: halls,
+		pagination,
 	});
 });
 

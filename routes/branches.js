@@ -10,11 +10,14 @@ const {
 } = require("../controller/branches");
 
 // api/v1/branchs
-router.route("/").get(getBranches).post(protect, createBranch);
+router
+	.route("/")
+	.get(getBranches)
+	.post(protect, authorize("admin"), createBranch);
 router
 	.route("/:id")
 	.get(getBranch)
-	.put(protect, updateBranch)
-	.delete(protect, deleteBranch);
+	.put(protect, authorize("admin"), updateBranch)
+	.delete(protect, authorize("admin"), deleteBranch);
 
 module.exports = router;

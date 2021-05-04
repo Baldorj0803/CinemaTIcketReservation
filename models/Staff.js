@@ -32,8 +32,6 @@ const StaffSchema = mongoose.Schema({
 		ref: "Branch",
 		required: true,
 	},
-	staffHomeAdd: String,
-	staffPhoneNum: Number,
 	password: {
 		type: String,
 		required: [true, "Нууц үгээ оруулна уу"],
@@ -49,8 +47,6 @@ const StaffSchema = mongoose.Schema({
 		type: String,
 		default: "no-photo-staff.jpg",
 	},
-	resetPasswordToken: String,
-	resetPasswordExpire: Date,
 });
 
 StaffSchema.methods.getJsonWebToken = function () {
