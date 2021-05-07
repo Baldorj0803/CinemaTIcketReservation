@@ -43,18 +43,15 @@ const MovieSchema = new mongoose.Schema(
 				required: [true, "Киноны төрөлийг оруулна уу"],
 			},
 		],
-		averageRating: {
+
+		rateCount: {
 			type: Number,
-			max: [10, "Дундаж үнэлгээ хамгийн ихдээ 10 байх ёстой"],
-			max: [0, "Дундаж үнэлгээ хамгийн багадаа 0 байх ёстой"],
 			default: 0,
 		},
-		ratedUser: [
-			{
-				type: mongoose.Schema.ObjectId,
-				ref: "User",
-			},
-		],
+		rateValue: {
+			type: Number,
+			default: 0,
+		},
 	},
 	{
 		toJSON: { virtuals: true },

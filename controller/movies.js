@@ -5,6 +5,8 @@ const path = require("path");
 const paginate = require("../utils/paginate");
 const Schedule = require("../models/Schedule");
 const Category = require("../models/Category");
+const Rates = require("../models/Rates");
+const mongoose = require("mongoose");
 
 //Одоо гарч буй
 exports.getMoviesNow = asyncHandler(async (req, res) => {
@@ -140,6 +142,11 @@ exports.getMovies = asyncHandler(async (req, res, next) => {
 });
 
 exports.getMovie = asyncHandler(async (req, res, next) => {
+	movieId = req.params.id || null;
+	userId = req.query.userId || null;
+
+	console.log(movieId, userId);
+
 	let start = new Date();
 	start.setHours(start.getHours() + 8);
 
@@ -157,10 +164,23 @@ exports.getMovie = asyncHandler(async (req, res, next) => {
 	if (!movie) {
 		throw new MyError(req.params.id + " ID-тэй кино байхгүй!", 400);
 	}
+	let rated = true;
+
+	if (userId && userId !== null) {
+		console.log("userId irse", movieId, userId);
+		let ratedBefore = await Rates.countDocuments({
+			movieId: new mongoose.Types.ObjectId(movieId),
+			userId: new mongoose.Types.ObjectId(userId),
+		});
+		if (ratedBefore === 0) {
+			rated = false;
+		}
+	}
 
 	res.status(200).json({
 		success: true,
 		data: movie,
+		rated,
 	});
 });
 
@@ -313,6 +333,45 @@ exports.uploadMoviePhoto = asyncHandler(async (req, res, next) => {
 	res.status(200).json({
 		success: true,
 		data: file.name,
+	});
+});
+
+exports.rateMovie = asyncHandler(async (req, res, next) => {
+	const movie = await Movie.findById(req.params.id);
+
+	if (!movie) {
+		throw new MyError(req.params.id + " ID-тай кино байхгүй байна", 400);
+	}
+
+	if (!req.userId) {
+		throw new MyError(req.params.id + " ID-тай хэрэглэгч байхгүй байна", 400);
+	}
+	let ratedBefore = await Rates.countDocuments({
+		movieId: new mongoose.Types.ObjectId(req.params.id),
+		userId: new mongoose.Types.ObjectId(req.userId),
+	});
+
+	if (ratedBefore) {
+		throw new MyError("Дахин үнэлгээ өгөх боломжгүй", 400);
+	}
+
+	var rate = {
+		userId: req.userId,
+		movieId: req.params.id,
+		value: req.body.rating,
+	};
+
+	const result = await Rates.create(rate);
+
+	movie.rateCount = movie.rateCount + 1;
+	movie.rateValue = movie.rateValue + req.body.rating;
+
+	const newRatedMovie = await movie.save();
+
+	res.status(200).json({
+		success: true,
+		ratedMovie: newRatedMovie,
+		rate: result,
 	});
 });
 

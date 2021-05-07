@@ -12,6 +12,7 @@ const {
 	getMoviesNow,
 	getMoviesComingSoon,
 	createMovieWithPhoto,
+	rateMovie,
 } = require("../controller/movies");
 
 router
@@ -29,5 +30,6 @@ router
 	.delete(protect, authorize("manager"), deleteMovie);
 
 router.route("/:id/photo").put(uploadMoviePhoto);
+router.route("/:id/rating").post(protect, authorize("user"), rateMovie);
 
 module.exports = router;
