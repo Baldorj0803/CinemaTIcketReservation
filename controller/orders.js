@@ -8,7 +8,6 @@ const paginate = require("../utils/paginate");
 const sendEmail = require("../utils/email");
 const Hall = require("../models/Hall");
 exports.createOrder = asyncHandler(async (req, res) => {
-	console.log("irsen zahialga", req.body);
 	let seats = req.body.seats;
 	if (seats.length > 10) {
 		throw new Error("Захиалгын тоо 10 аас бага байх ёстой", 400);
