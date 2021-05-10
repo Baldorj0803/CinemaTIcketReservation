@@ -2,6 +2,15 @@ const Branch = require("../models/Branch");
 const MyError = require("../utils/Error");
 const asyncHandler = require("express-async-handler");
 const paginate = require("../utils/paginate");
+const Hall = require("../models/Hall");
+const mongoose = require("mongoose");
+
+async function hallCheck(branchId) {
+	const hall = await Hall.find({
+		branch: new mongoose.Types.ObjectId(branchId),
+	}).populate("schedules");
+	return hall;
+}
 
 exports.getBranches = asyncHandler(async (req, res, next) => {
 	const select = req.query.select;
@@ -28,6 +37,8 @@ exports.getBranches = asyncHandler(async (req, res, next) => {
 exports.getBranch = asyncHandler(async (req, res, next) => {
 	const branch = await Branch.findById(req.params.id).populate("halls");
 
+	const hall = await hallCheck(req.params.id);
+
 	if (!branch) {
 		throw new MyError(req.params.id + " ID-тэй салбар байхгүй!", 400);
 	}
@@ -35,6 +46,7 @@ exports.getBranch = asyncHandler(async (req, res, next) => {
 	res.status(200).json({
 		success: true,
 		data: branch,
+		hall,
 	});
 });
 

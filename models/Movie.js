@@ -246,7 +246,8 @@ MovieSchema.statics.nowPlaying = async function (
 };
 
 MovieSchema.pre("remove", async function (next) {
-	await this.model("Comment").deleteMany({ movieId: this._id });
+	await this.model("Schedule").deleteMany({ movieId: this._id });
+	await this.model("Rates").deleteMany({ movieId: this._id });
 	next();
 });
 

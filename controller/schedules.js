@@ -5,6 +5,8 @@ const Staff = require("../models/Staff");
 const Movie = require("../models/Movie");
 const Hall = require("../models/Hall");
 const paginate = require("../utils/paginate");
+const Order = require("../models/Order");
+const mongoose = require("mongoose");
 
 exports.getSchedules = asyncHandler(async (req, res, next) => {
 	const select = req.query.select;
@@ -22,7 +24,8 @@ exports.getSchedules = asyncHandler(async (req, res, next) => {
 		.limit(limit)
 		.populate("hallId")
 		.populate("movieId")
-		.populate("staffId");
+		.populate("staffId")
+		.populate("orders");
 
 	res.status(200).json({
 		success: true,
@@ -120,6 +123,14 @@ exports.updateSchedule = asyncHandler(async (req, res, next) => {
 		throw new Error("Таны хуваарь биш байна", 400);
 	}
 
+	let ordered = await Order.countDocuments({
+		scheduleId: new mongoose.Types.ObjectId(req.params.id),
+	});
+
+	if (ordered > 0) {
+		throw new Error("Захиалгатай тул засварлах боломжгүй байна", 400);
+	}
+
 	if (req.body.startTime) {
 		const movie = await Movie.findById(req.body.movieId);
 
@@ -174,6 +185,15 @@ exports.deleteSchedule = asyncHandler(async (req, res, next) => {
 
 	if (!schedule) {
 		throw new Error(req.params.id + " ID-тэй хуваарь байхгүйээээ.", 400);
+	}
+	let ordered = await Order.countDocuments({
+		scheduleId: new mongoose.Types.ObjectId(req.params.id),
+	});
+
+	console.log(ordered);
+
+	if (ordered > 0) {
+		throw new Error("Захиалгатай тул устгах боломжгүй байна", 400);
 	}
 
 	schedule.remove();

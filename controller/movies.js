@@ -5,6 +5,7 @@ const path = require("path");
 const paginate = require("../utils/paginate");
 const Schedule = require("../models/Schedule");
 const Category = require("../models/Category");
+const Order = require("../models/Order");
 const Rates = require("../models/Rates");
 const mongoose = require("mongoose");
 
@@ -130,6 +131,7 @@ exports.getMovies = asyncHandler(async (req, res, next) => {
 	const pagination = await paginate(page, limit, Movie);
 
 	const movies = await Movie.find(req.query, select)
+		.populate("schedules")
 		.sort({ movName: 1 })
 		.skip(pagination.start - 1)
 		.limit(limit);
@@ -164,15 +166,35 @@ exports.getMovie = asyncHandler(async (req, res, next) => {
 	if (!movie) {
 		throw new MyError(req.params.id + " ID-тэй кино байхгүй!", 400);
 	}
+
 	let rated = true;
 
 	if (userId && userId !== null) {
-		console.log("userId irse", movieId, userId);
+		const order = await Order.aggregate([
+			{
+				$lookup: {
+					from: "schedules",
+					localField: "scheduleId",
+					foreignField: "_id",
+					as: "schedules",
+				},
+			},
+			{
+				$match: {
+					userId: new mongoose.Types.ObjectId(userId),
+					status: true,
+					schedules: {
+						$elemMatch: { movieId: new mongoose.Types.ObjectId(movieId) },
+					},
+				},
+			},
+		]);
+
 		let ratedBefore = await Rates.countDocuments({
 			movieId: new mongoose.Types.ObjectId(movieId),
 			userId: new mongoose.Types.ObjectId(userId),
 		});
-		if (ratedBefore === 0) {
+		if (ratedBefore === 0 && order.length > 0) {
 			rated = false;
 		}
 	}
@@ -214,6 +236,12 @@ exports.deleteMovie = asyncHandler(async (req, res, next) => {
 
 	if (!movie) {
 		throw new MyError(req.params.id + " ID-тай кино байхгүй байна", 400);
+	}
+
+	let c = await orderedMovie(req.params.id);
+
+	if (c > 0) {
+		throw new MyError("Захиалагдсан кино устгах боломжгүй", 400);
 	}
 
 	movie.remove();
@@ -346,6 +374,31 @@ exports.rateMovie = asyncHandler(async (req, res, next) => {
 	if (!req.userId) {
 		throw new MyError(req.params.id + " ID-тай хэрэглэгч байхгүй байна", 400);
 	}
+
+	const order = await Order.aggregate([
+		{
+			$lookup: {
+				from: "schedules",
+				localField: "scheduleId",
+				foreignField: "_id",
+				as: "schedules",
+			},
+		},
+		{
+			$match: {
+				userId: new mongoose.Types.ObjectId(userId),
+				status: true,
+				schedules: {
+					$elemMatch: { movieId: new mongoose.Types.ObjectId(movieId) },
+				},
+			},
+		},
+	]);
+
+	if (!order || order.length < 1) {
+		throw new MyError("Тасалбар захиалаагүй учир үнэлгээ өгөх боломжгүй", 400);
+	}
+
 	let ratedBefore = await Rates.countDocuments({
 		movieId: new mongoose.Types.ObjectId(req.params.id),
 		userId: new mongoose.Types.ObjectId(req.userId),
@@ -387,4 +440,26 @@ function paginate_movies(page, limit, total) {
 	if (page > 1) pagination.prevPage = page - 1;
 
 	return pagination;
+}
+
+async function orderedMovie(movieId) {
+	const ordered = await Order.aggregate([
+		{
+			$lookup: {
+				from: "schedules",
+				localField: "scheduleId",
+				foreignField: "_id",
+				as: "schedules",
+			},
+		},
+		{
+			$match: {
+				status: true,
+				schedules: {
+					$elemMatch: { movieId: new mongoose.Types.ObjectId(movieId) },
+				},
+			},
+		},
+	]);
+	return ordered.length;
 }

@@ -53,9 +53,9 @@ exports.createOrder = asyncHandler(async (req, res) => {
 	}
 
 	const date = new Date();
-	date.setHours(date.getHours() + 8);
 	req.body.date = date;
 	const order = await Order.create(req.body);
+	console.log("date", date);
 
 	setTimeout(async function () {
 		const o = await Order.findOne({
@@ -73,7 +73,10 @@ exports.createOrder = asyncHandler(async (req, res) => {
 				}
 			});
 		}
-	}, 10 * 60 * 1000);
+	}, 20 * 60 * 1000);
+
+	date.setMinutes(date.getMinutes() + 20);
+	console.log("duusah", date);
 
 	res.status(200).json({
 		success: true,
@@ -163,6 +166,7 @@ exports.deleteOrder = asyncHandler(async (req, res, next) => {
 	if (!order) {
 		throw new Error(req.params.id + " ID -тай захиалга байхгүй байна");
 	}
+	console.log("Захиалга устгагдлаа");
 
 	res.status(200).json({
 		success: true,

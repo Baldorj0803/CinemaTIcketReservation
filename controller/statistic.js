@@ -53,3 +53,42 @@ exports.adminStatistic = asyncHandler(async (req, res, next) => {
 		},
 	});
 });
+
+exports.managerStatistic = asyncHandler(async (req, res, next) => {
+	const schedules = await Schedule.aggregate([
+		{
+			$lookup: {
+				from: "orders",
+				localField: "_id",
+				foreignField: "scheduleId",
+				as: "order",
+			},
+		},
+		{
+			$unwind: {
+				path: "$order",
+			},
+		},
+		{
+			$group: {
+				_id: { $dayOfYear: "$startTime" },
+				startTime: { $first: "$startTime" },
+				totalSchedule: { $sum: 1 },
+				totalOrder: { $sum: { $add: ["$order.child", "$order.adult"] } },
+				totalAmount: { $sum: "$order.totalPrice" },
+			},
+		},
+		{
+			$sort: {
+				startTime: -1,
+			},
+		},
+	]);
+
+	res.status(200).json({
+		success: true,
+		data: {
+			schedules,
+		},
+	});
+});

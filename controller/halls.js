@@ -3,6 +3,8 @@ const Error = require("../utils/Error");
 const asyncHandler = require("express-async-handler");
 const Branch = require("../models/Branch");
 const paginate = require("../utils/paginate");
+const Schedule = require("../models/Schedule");
+const mongoose = require("mongoose");
 
 exports.getHalls = asyncHandler(async (req, res, next) => {
 	const select = req.query.select;
@@ -56,6 +58,13 @@ exports.createHall = asyncHandler(async (req, res, next) => {
 	});
 });
 exports.updateHall = asyncHandler(async (req, res, next) => {
+	let schedule = await Schedule.countDocuments({
+		hallId: new mongoose.Types.ObjectId(req.params.id),
+	});
+
+	if (schedule > 0) {
+		throw new Error("Хуваарьтай тул засварлах боломжгүй байна", 404);
+	}
 	const hall = await Hall.findByIdAndUpdate(req.params.id, req.body, {
 		new: true,
 		runValidators: true,
@@ -71,11 +80,21 @@ exports.updateHall = asyncHandler(async (req, res, next) => {
 	});
 });
 exports.deleteHall = asyncHandler(async (req, res, next) => {
-	const hall = await Hall.findByIdAndDelete(req.params.id);
+	const hall = await Hall.findById(req.params.id);
 
 	if (!hall) {
-		throw new Error(req.params.id + " ID -тай танхим байхгүй байна");
+		throw new Error(req.params.id + " ID -тай танхим байхгүй байна", 404);
 	}
+
+	let schedule = await Schedule.countDocuments({
+		hallId: new mongoose.Types.ObjectId(req.params.id),
+	});
+
+	if (schedule > 0) {
+		throw new Error("Хуваарьтай тул устгах боломжгүй байна", 404);
+	}
+
+	hall.remove();
 
 	res.status(200).json({
 		success: true,
