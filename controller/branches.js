@@ -37,8 +37,6 @@ exports.getBranches = asyncHandler(async (req, res, next) => {
 exports.getBranch = asyncHandler(async (req, res, next) => {
 	const branch = await Branch.findById(req.params.id).populate("halls");
 
-	const hall = await hallCheck(req.params.id);
-
 	if (!branch) {
 		throw new MyError(req.params.id + " ID-тэй салбар байхгүй!", 400);
 	}
@@ -68,6 +66,10 @@ exports.updateBranch = asyncHandler(async (req, res, next) => {
 	if (!branch) {
 		throw new MyError(req.params.id + " ID-тэй салбар байхгүй!", 400);
 	}
+	const hall = await hallCheck(req.params.id);
+	if (hall.length > 0) {
+		throw new MyError("Танхим хуваарьтай тул өөрчлөх боломжгүй", 400);
+	}
 
 	res.status(200).json({
 		success: true,
@@ -80,6 +82,10 @@ exports.deleteBranch = asyncHandler(async (req, res, next) => {
 
 	if (!branch) {
 		throw new MyError(req.params.id + " ID-тэй салбар байхгүй!", 400);
+	}
+	const hall = await hallCheck(req.params.id);
+	if (hall.length > 0) {
+		throw new MyError("Танхим хуваарьтай тул устгах боломжгүй", 400);
 	}
 	branch.remove();
 

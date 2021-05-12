@@ -72,10 +72,17 @@ exports.getMoviesNow = asyncHandler(async (req, res) => {
 exports.getMoviesComingSoon = asyncHandler(async (req, res) => {
 	const page = parseInt(req.query.page) || 1;
 	const limit = parseInt(req.query.limit) || 3;
+	const month = parseInt(req.query.month) || null;
 
 	let now = new Date();
 	now.setHours(now.getHours() + 8);
+	let monthSearch = [];
 
+	if (month !== null) {
+		monthSearch = [month];
+	} else {
+		monthSearch = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+	}
 	const total = await Schedule.aggregate([
 		{
 			$sort: { startTime: 1 },
@@ -92,11 +99,13 @@ exports.getMoviesComingSoon = asyncHandler(async (req, res) => {
 		{
 			$project: {
 				first: { $arrayElemAt: ["$schedules", 0] },
+				month: { $month: { $arrayElemAt: ["$schedules", 0] } },
 			},
 		},
 		{
 			$match: {
 				first: { $gte: now },
+				month: { $in: monthSearch },
 			},
 		},
 		{
@@ -109,9 +118,17 @@ exports.getMoviesComingSoon = asyncHandler(async (req, res) => {
 		},
 	]);
 
-	const pagination = await paginate_movies(page, limit, total[0].total);
+	let movies = [];
+	let pagination = [];
+	if (total.length !== 0) {
+		pagination = await paginate_movies(page, limit, total[0].total);
 
-	const movies = await Schedule.comingSoon(limit, pagination.start - 1);
+		movies = await Schedule.comingSoon(
+			limit,
+			pagination.start - 1,
+			monthSearch
+		);
+	}
 
 	res.status(200).json({
 		success: true,

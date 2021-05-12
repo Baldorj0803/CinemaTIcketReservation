@@ -75,7 +75,7 @@ ScheduleSchema.statics.checkSchedule = async function (start, end, hall) {
 	return obj;
 };
 
-ScheduleSchema.statics.comingSoon = async function (limit, skip) {
+ScheduleSchema.statics.comingSoon = async function (limit, skip, monthSearch) {
 	let now = new Date();
 	now.setHours(now.getHours() + 8);
 
@@ -95,11 +95,13 @@ ScheduleSchema.statics.comingSoon = async function (limit, skip) {
 		{
 			$project: {
 				first: { $arrayElemAt: ["$schedules", 0] },
+				month: { $month: { $arrayElemAt: ["$schedules", 0] } },
 			},
 		},
 		{
 			$match: {
 				first: { $gte: now },
+				month: { $in: monthSearch },
 			},
 		},
 		{

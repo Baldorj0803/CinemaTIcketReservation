@@ -5,6 +5,8 @@ const colors = require("colors");
 const fileupload = require("express-fileupload");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
+var rfs = require("rotating-file-stream");
 
 const connectDB = require("./config/db");
 const categoriesRoutes = require("./routes/categories");
@@ -25,6 +27,11 @@ const errorHandler = require("./middleware/error");
 dotenv.config({ path: "./config/config.env" });
 connectDB();
 
+var accessLogStream = rfs.createStream("access.log", {
+	interval: "1d", // rotate daily
+	path: path.join(__dirname, "log"),
+});
+
 const app = express();
 app.set("view engine", "hjs");
 
@@ -34,7 +41,7 @@ app.use(fileupload());
 app.use(cors());
 app.use("/static", express.static(path.join(__dirname, "public")));
 app.use(logger);
-app.use(morgan("dev"));
+app.use(morgan("combined", { stream: accessLogStream }));
 app.use("/api/v1/categories", categoriesRoutes);
 app.use("/api/v1/staffs", staffRoutes);
 app.use("/api/v1/movies", moviesRoutes);
